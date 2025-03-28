@@ -39,9 +39,20 @@ jobs:
       
       - name: Install dependencies
         run: pnpm install
+
+      - name: Create Sentry release
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: "envious"
+          SENTRY_PROJECT: "javascript-vue"
+        run: |
+          # 创建 .env.sentry-build-plugin 文件
+          echo "SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN" > .env.sentry-build-plugin
       
       - name: Build
         run: pnpm build
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

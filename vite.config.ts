@@ -11,6 +11,9 @@ export default defineConfig({
   plugins: [vue(), vueDevTools(), tailwindcss(), sentryVitePlugin({
     org: "envious",
     project: "javascript-vue"
+  }), sentryVitePlugin({
+    org: "envious",
+    project: "javascript-vue"
   })],
 
   resolve: {
