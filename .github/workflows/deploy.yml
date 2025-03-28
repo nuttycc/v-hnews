@@ -1,8 +1,8 @@
-name: Deploy to GitHub Pages
+name: Optimized Deploy
 
 on:
   push:
-    branches: ['dev']
+    branches: [ dev ]
   workflow_dispatch:
 
 permissions:
@@ -14,20 +14,28 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
           version: 8
-          run_install: false
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
+      
+      - name: Cache build
+        uses: actions/cache@v3
+        with:
+          path: |
+            dist
+            node_modules/.vite
+          key: ${{ runner.os }}-vite-build-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx', '**/*.vue') }}
+          restore-keys: |
+            ${{ runner.os }}-vite-build-${{ hashFiles('**/pnpm-lock.yaml') }}-
       
       - name: Install dependencies
         run: pnpm install

@@ -3,7 +3,7 @@ import createLogger from '@/lib/slogger'
 
 const logger = createLogger('[store][hnews]')
 const BASE_URL = 'https://hacker-news.firebaseio.com/v0/'
-const ALGOLIA_BASE_URL = 'http://hn.algolia.com/api/v1/'
+const ALGOLIA_BASE_URL = 'https://hn.algolia.com/api/v1/'
 
 export const HITS_PER_PAGE = 20
 
