@@ -19,6 +19,3 @@ app.use(router)
 
 app.mount('#app')
 
-setTimeout(() => {
-  throw new Error('Test error')
-}, 1000)
