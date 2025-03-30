@@ -26,6 +26,7 @@ export interface ALGOItem {
 interface HNewsState {
   itemsMap: Map<number, ALGOItem>
   lists: Record<StoryType, number[]>
+  commentCountCache: Map<number, number>
 }
 
 export const useHnewsStore = defineStore('hnews', {
@@ -41,11 +42,12 @@ export const useHnewsStore = defineStore('hnews', {
     return {
       itemsMap: new Map<number, ALGOItem>(),
       lists: listInit,
+      commentCountCache: new Map<number, number>(),
     }
   },
 
   getters: {
-    itemsByType: (state) => {
+    getItemsByType: (state) => {
       return (type: StoryType): ALGOItem[] => {
         const ids = state.lists[type] ?? []
         return ids
@@ -53,8 +55,51 @@ export const useHnewsStore = defineStore('hnews', {
           .filter((item): item is ALGOItem => item !== undefined)
       }
     },
-    itemById: (state) => {
+    getItemById: (state) => {
       return (id: number): ALGOItem | undefined => state.itemsMap.get(id)
+    },
+    /**
+     * 计算一个项目的所有评论总数（包括嵌套评论）
+     * 使用BFS迭代法实现，性能较好且避免栈溢出
+     */
+    getTotalCommentCount: (state) => {
+      return (item: ALGOItem | undefined): number => {
+        if (!item) return 0
+
+        // 检查缓存中是否已有计算结果
+        if (state.commentCountCache.has(item.id)) {
+          return state.commentCountCache.get(item.id)!
+        }
+
+        // 使用BFS迭代方法计算所有评论数
+        // 优点：避免栈溢出，性能较好
+        const countComments = (root: ALGOItem): number => {
+          if (!root.children || root.children.length === 0) {
+            return 0
+          }
+
+          let count = 0
+          const queue: ALGOItem[] = [...root.children]
+          count += root.children.length
+
+          while (queue.length > 0) {
+            const current = queue.shift()!
+            if (current.children && current.children.length > 0) {
+              count += current.children.length
+              queue.push(...current.children)
+            }
+          }
+
+          return count
+        }
+
+        const result = countComments(item)
+
+        // 缓存结果
+        state.commentCountCache.set(item.id, result)
+
+        return result
+      }
     },
   },
 
@@ -62,7 +107,7 @@ export const useHnewsStore = defineStore('hnews', {
     /**
      * 获取一个 item。
      * 默认行为：有缓存取缓存，没有才重新请求。
-    **/
+     **/
     async fetchItemByID(id: number, forceRefresh: boolean = false): Promise<ALGOItem> {
       if (!forceRefresh && this.itemsMap.has(id)) {
         // logger.debug('🚀 fetch -> Get from map.')
@@ -78,6 +123,8 @@ export const useHnewsStore = defineStore('hnews', {
         }
         const json = (await res.json()) as ALGOItem
         this.itemsMap.set(json.id, json)
+        // 清除评论计数缓存
+        this.commentCountCache.delete(json.id)
         // logger.debug('fetched a story!', json)
         return json
       } catch (error) {
@@ -160,20 +207,20 @@ export const useHnewsStore = defineStore('hnews', {
 
       try {
         const allIds = await this.fetchListIdsByType(type, forceRefreshList)
-        if(!allIds) {
+        if (!allIds) {
           logger.warn(`[fetchListPage] No ids fetched for ${type}.`)
           return
         }
 
         const totalIds = allIds.length
-        if(totalIds === 0) {
+        if (totalIds === 0) {
           logger.warn(`[fetchListPage] No ids fetched for ${type}.`)
           return { items: [], totalIds: 0 }
         }
 
         const startIndex = (page - 1) * HITS_PER_PAGE
 
-        if(startIndex >= totalIds) {
+        if (startIndex >= totalIds) {
           logger.warn(`[fetchListPage] Page ${page} is out of range for ${type}.`)
           return { items: [], totalIds }
         }
@@ -181,8 +228,12 @@ export const useHnewsStore = defineStore('hnews', {
         const endIndex = Math.min(startIndex + HITS_PER_PAGE, totalIds)
         const idsToFetch = allIds.slice(startIndex, endIndex)
         const items = await this.fetchItems(idsToFetch, false)
-        const orderedItems = idsToFetch.map((id) => items.find(item => item.id === id)).filter((item): item is ALGOItem => item !== undefined)
-        logger.debug(`[fetchListPage] Fetched ${orderedItems.length} items for ${type} page ${page}.`)
+        const orderedItems = idsToFetch
+          .map((id) => items.find((item) => item.id === id))
+          .filter((item): item is ALGOItem => item !== undefined)
+        logger.debug(
+          `[fetchListPage] Fetched ${orderedItems.length} items for ${type} page ${page}.`,
+        )
         return { items: orderedItems, totalIds }
       } catch (error) {
         logger.error(`[fetchListPage] Error fetching ${type} page ${page}:`, error)

@@ -27,7 +27,7 @@ const route = useRoute();
 logger.debug('route', route)
 const store = useHnewsStore()
 
-const items = computed(() => store.itemsByType(props.type))
+const items = computed(() => store.getItemsByType(props.type))
 
 watchEffect(() => {
   store.fetchListPage(props.type, props.page)

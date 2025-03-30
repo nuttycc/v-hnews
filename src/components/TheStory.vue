@@ -17,7 +17,7 @@
       <template #footer-comments>
         <span>
           <RouterLink :to="`/item/${item.id}`" class="px-1 underline hover:decoration-[0.1em]">
-            {{ item.children.length }} comments
+            {{ totalComments }} comments
           </RouterLink>
         </span>
       </template>
@@ -37,14 +37,15 @@ import { useHnewsStore } from '@/stores/hnews'
 import { computed, watchEffect } from 'vue'
 import StoryItem from './slots/StoryItem.vue'
 import { useTimeAgo } from '@vueuse/core'
-import { RouterLink } from 'vue-router';
-const props = defineProps<{ id: number; index: number }>()
+import { RouterLink } from 'vue-router'
+const props = defineProps<{ id: number; index: string | number }>()
 const store = useHnewsStore()
 
-const item = computed(() => store.itemById(props.id))
+const item = computed(() => store.getItemById(props.id))
+const totalComments = computed(() => store.getTotalCommentCount(item.value))
 
 watchEffect(() => {
-  store.itemById(props.id)
+  store.getItemById(props.id)
 })
 </script>
 
