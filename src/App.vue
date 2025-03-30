@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storyTypes } from "./stores/hnews.ts";
-
+// import TheCounter from "./components/base/TheCounter.vue";
 
 </script>
 
@@ -11,6 +11,7 @@ import { storyTypes } from "./stores/hnews.ts";
         {{ type }}
       </RouterLink>
     </nav>
+    <!-- <TheCounter /> -->
     <hr class="mb-2" />
   </header>
 
