@@ -13,7 +13,7 @@ export type StoryType = (typeof storyTypes)[number]
 export interface ALGOItem {
   id: number
   title: string
-  type: 'story' | 'comment'
+  type: 'story' | 'comment' | 'job'
   url: string
   author: string
   created_at: string

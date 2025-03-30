@@ -1,18 +1,18 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 // import HomeView from '../views/HomeView.vue'
-import { storyTypes } from "../stores/hnews";
+import { storyTypes } from '../stores/hnews'
 
 const storyTypeRoutes: RouteRecordRaw[] = storyTypes.map((type) => {
   return {
     path: `/${type}/:page?`,
     name: `${type}`,
     component: () => import('../views/NewsView.vue'),
-    props: route => {
+    props: (route) => {
       return {
         type: type,
-        page: route.params.page ? Math.max(1, parseInt(route.params.page as string, 10)) : 1
+        page: route.params.page ? Math.max(1, parseInt(route.params.page as string, 10)) : 1,
       }
-    }
+    },
   }
 })
 
@@ -22,7 +22,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      redirect:'/top',
+      redirect: '/top',
       // component: HomeView,
     },
     {
@@ -34,14 +34,14 @@ const router = createRouter({
       component: () => import('../views/AboutView.vue'),
     },
     {
-      path:'/item/:id',
+      path: '/item/:id',
       name: `item-id`,
       component: () => import('../views/DetailView.vue'),
-      props: route => {
+      props: (route) => {
         return {
-          id: parseInt(route.params.id as string, 10)
+          id: parseInt(route.params.id as string, 10),
         }
-      }
+      },
     },
     ...storyTypeRoutes,
   ],
