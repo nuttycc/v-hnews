@@ -1,10 +1,7 @@
 import debug from 'debug'
 
-
-
 // Base namespace for the entire application
 const APP_NAMESPACE = 'v-hnews'
-
 
 if (import.meta.env.DEV) {
   debug.enable(`${APP_NAMESPACE}:*`)
@@ -25,43 +22,14 @@ export function createLogger(namespace: string) {
   const warnLogger = debug(`${fullNamespace}:warn`)
   const errorLogger = debug(`${fullNamespace}:error`)
 
-  // Configure colors for different log levels
-  // debugLogger.color = '#7f8c8d' // Gray
-  // infoLogger.color = '#2ecc71' // Green
-  // warnLogger.color = '#f39c12' // Orange
-  // errorLogger.color = '#e74c3c' // Red
-
   return {
-    /**
-     * Debug level logging - for detailed information
-     */
     debug: debugLogger,
-
-    /**
-     * Info level logging - for general operational information
-     */
     info: infoLogger,
-
-    /**
-     * Warning level logging - for potential issues
-     */
     warn: warnLogger,
-
-    /**
-     * Error level logging - for serious issues
-     */
     error: errorLogger,
-
-    /**
-     * Log with all namespaces at once (for important events)
-     */
     log: (message: string, ...args: unknown[]) => {
       infoLogger(message, ...args)
     },
-
-    /**
-     * Get the namespace for this logger
-     */
     namespace: fullNamespace,
   }
 }

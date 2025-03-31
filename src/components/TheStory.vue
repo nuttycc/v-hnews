@@ -28,15 +28,12 @@
         {{ useTimeAgo(new Date(item.created_at)) }}
       </template>
     </StoryItem>
-    <div v-else class="h-80 bg-green-400">
-
-    </div>
+    <div v-else class="h-80 bg-green-400"></div>
   </div>
 </template>
 <script setup lang="ts">
-// Get one story
+// Show one story
 import { useHnewsStore } from '@/stores/hnews'
-// import { storeToRefs } from 'pinia';
 import { computed, watchEffect } from 'vue'
 import StoryItem from './slots/StoryItem.vue'
 import { useTimeAgo } from '@vueuse/core'

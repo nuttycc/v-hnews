@@ -9,31 +9,38 @@
       </template>
 
       <template #footer-actions v-if="item.children.length > 0">
-        <Icon :icon="isToggle ? 'ph:minus-fill' : 'basil:add-solid'" @click="isToggle = !isToggle" />
+        <Icon
+          :icon="isToggle ? 'ph:minus-fill' : 'basil:add-solid'"
+          @click="isToggle = !isToggle"
+        />
       </template>
 
       <template #text>
         <div v-html="item.text"></div>
       </template>
 
-    <template #children v-if="isToggle">
-      <TheComment v-for="child in item.children" :key="child.id" :id="child.id" :r-index="props.rIndex + 10" />
-    </template>
+      <template #children v-if="isToggle">
+        <TheComment
+          v-for="child in item.children"
+          :key="child.id"
+          :id="child.id"
+          :r-index="props.rIndex + 10"
+        />
+      </template>
     </CommentItem>
   </div>
 </template>
 
-
 <script setup lang="ts">
-import { useHnewsStore } from '@/stores/hnews';
-import CommentItem from './slots/CommentItem.vue';
-import { computed, watchEffect, ref } from 'vue';
-import { useTimeAgo } from '@vueuse/core';
-import { Icon } from '@iconify/vue';
+import { useHnewsStore } from '@/stores/hnews'
+import CommentItem from './slots/CommentItem.vue'
+import { computed, watchEffect, ref } from 'vue'
+import { useTimeAgo } from '@vueuse/core'
+import { Icon } from '@iconify/vue'
 
 const props = defineProps<{
-  id: number,
-  rIndex: number,
+  id: number
+  rIndex: number
 }>()
 
 const store = useHnewsStore()

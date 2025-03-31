@@ -1,4 +1,4 @@
-import { Redis } from "@upstash/redis";
+import { Redis } from '@upstash/redis'
 
 const redis = new Redis({
   url: import.meta.env.VITE_UPSTASH_REDIS_REST_URL,
@@ -12,7 +12,7 @@ export async function incrVisitCounter() {
   return count
 }
 
-export async function getVisitCounter() : Promise<number> {
+export async function getVisitCounter(): Promise<number> {
   const key = 'vnews:visit-counter'
   const count = (await redis.get(key)) as number
   return count || 0

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import createLogger from '@/lib/slogger'
 
-const logger = createLogger('[store][hnews]')
+const logger = createLogger('[🍍][hnews]')
 const BASE_URL = 'https://hacker-news.firebaseio.com/v0/'
 const ALGOLIA_BASE_URL = 'https://hn.algolia.com/api/v1/'
 
@@ -100,12 +100,10 @@ export const useHnewsStore = defineStore('hnews', {
   actions: {
     async fetchItemByID(id: number, forceRefresh: boolean = false): Promise<ALGOItem> {
       if (!forceRefresh && this.itemsMap.has(id)) {
-        // logger.debug('🚀 fetch -> Get from map.')
         return this.itemsMap.get(id)!
       }
 
       try {
-        // logger.debug('🔜 Fetching...', id)
         const res = await fetch(`${ALGOLIA_BASE_URL}items/${id}`)
         if (!res.ok) {
           logger.error(`Failed to fetch item ${id}: ${res.statusText}`)
@@ -113,9 +111,7 @@ export const useHnewsStore = defineStore('hnews', {
         }
         const json = (await res.json()) as ALGOItem
         this.itemsMap.set(json.id, json)
-        // 清除评论计数缓存
         this.commentCountCache.delete(json.id)
-        // logger.debug('fetched a story!', json)
         return json
       } catch (error) {
         logger.error(`Error fetching item ${id}:`, error)
@@ -132,13 +128,13 @@ export const useHnewsStore = defineStore('hnews', {
           .map((id) => this.itemsMap.get(id))
           .filter((item): item is ALGOItem => item !== undefined)
       }
-      logger.debug(`[fetchItems] Fetching ${idsToFetch.length} items...`, idsToFetch)
+
+      logger.debug(`[fetchItems] Fetching ${idsToFetch.length} items...`)
 
       const promises = idsToFetch.map((id) => this.fetchItemByID(id, forceRefresh))
 
       try {
         const results = await Promise.allSettled(promises)
-        logger.debug('[fetchItems] Promise results: ', results)
         const fetchedItems: ALGOItem[] = []
         results.forEach((result, index) => {
           if (result.status === 'fulfilled') {

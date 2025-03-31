@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { storyTypes } from "./stores/hnews.ts";
+import { storyTypes } from './stores/hnews.ts'
 // import TheCounter from "./components/base/TheCounter.vue";
-import { useRoute } from "vue-router";
+import { useRoute } from 'vue-router'
 
 const route = useRoute()
 console.log(route.path)
@@ -9,9 +9,18 @@ console.log(route.path)
 
 <template>
   <header>
-    <nav class="md:flex md:flex-row gap-2 mb-1">
-      <RouterLink v-for="type in storyTypes" :to="`/${type}/1`" :key="type"
-      :class="['px-2 uppercase ', $route.path.split('/')[1] === type ? 'dark:bg-green-700' : 'dark:bg-slate-800 dark:hover:bg-slate-700']">
+    <nav class="mb-1 gap-2 md:flex md:flex-row">
+      <RouterLink
+        v-for="type in storyTypes"
+        :to="`/${type}/1`"
+        :key="type"
+        :class="[
+          'px-2 uppercase',
+          $route.path.split('/')[1] === type
+            ? 'dark:bg-green-700'
+            : 'dark:bg-slate-800 dark:hover:bg-slate-700',
+        ]"
+      >
         {{ type }}
       </RouterLink>
     </nav>
@@ -22,6 +31,4 @@ console.log(route.path)
   <RouterView />
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>
