@@ -48,9 +48,12 @@ export const useHnewsStore = defineStore('hnews', {
 
   getters: {
     getItemsByType: (state) => {
-      return (type: StoryType): ALGOItem[] => {
+      return (type: StoryType, page: number): ALGOItem[] => {
         const ids = state.lists[type] ?? []
+        const startIndex = (page - 1) * HITS_PER_PAGE
+        const endIndex = Math.min(startIndex + HITS_PER_PAGE, ids.length)
         return ids
+          .slice(startIndex, endIndex)
           .map((id) => state.itemsMap.get(id))
           .filter((item): item is ALGOItem => item !== undefined)
       }
@@ -58,21 +61,15 @@ export const useHnewsStore = defineStore('hnews', {
     getItemById: (state) => {
       return (id: number): ALGOItem | undefined => state.itemsMap.get(id)
     },
-    /**
-     * 计算一个项目的所有评论总数（包括嵌套评论）
-     * 使用BFS迭代法实现，性能较好且避免栈溢出
-     */
+
     getTotalCommentCount: (state) => {
       return (item: ALGOItem | undefined): number => {
         if (!item) return 0
 
-        // 检查缓存中是否已有计算结果
         if (state.commentCountCache.has(item.id)) {
           return state.commentCountCache.get(item.id)!
         }
 
-        // 使用BFS迭代方法计算所有评论数
-        // 优点：避免栈溢出，性能较好
         const countComments = (root: ALGOItem): number => {
           if (!root.children || root.children.length === 0) {
             return 0
@@ -94,20 +91,13 @@ export const useHnewsStore = defineStore('hnews', {
         }
 
         const result = countComments(item)
-
-        // 缓存结果
         state.commentCountCache.set(item.id, result)
-
         return result
       }
     },
   },
 
   actions: {
-    /**
-     * 获取一个 item。
-     * 默认行为：有缓存取缓存，没有才重新请求。
-     **/
     async fetchItemByID(id: number, forceRefresh: boolean = false): Promise<ALGOItem> {
       if (!forceRefresh && this.itemsMap.has(id)) {
         // logger.debug('🚀 fetch -> Get from map.')

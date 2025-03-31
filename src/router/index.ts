@@ -17,12 +17,14 @@ const storyTypeRoutes: RouteRecordRaw[] = storyTypes.map((type) => {
 })
 
 const router = createRouter({
+  linkActiveClass: 'router-link-active dark:bg-green-600 ',
+  linkExactActiveClass: 'router-link-exact-active dark:bg-green-600',
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
       name: 'home',
-      redirect: '/top',
+      redirect: '/top/1',
       // component: HomeView,
     },
     {

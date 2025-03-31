@@ -1,9 +1,28 @@
 <template>
-  <div class="flex flex-col gap-3">
-    <div v-for="(item, i) in items" :key="item.id">
-      <TheStory :id="item.id" :index="(page - 1) * HITS_PER_PAGE + i + 1" />
+  <div class="flex flex-col">
+    <div v-if="items.length > 0" class="flex flex-col gap-3">
+      <div  v-for="(item, i) in items" :key="item.id">
+        <TheStory :id="item.id" :index="(page - 1) * HITS_PER_PAGE + i + 1" />
+      </div>
+    </div>
+    <div v-else>
+      <div v-for="i in 20" :key="i">
+        <div class="h-9 mb-1 flex flex-col gap-1 animate-pulse">
+          <div class="h-1/3 w-52 dark:bg-slate-600"></div>
+          <div class="h-1/3 w-80 dark:bg-slate-600"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pagination flex flex-row gap-1 mt-4">
+      <RouterLink :to="{ name: `${props.type}`, params: { page: props.page - 1 } }">Previous</RouterLink>
+      <RouterLink v-if="props.page > 1" :to="{ name: `${props.type}`, params: { page: 1 } }">1</RouterLink>
+      <span v-if="props.page > 2">...</span>
+      <RouterLink v-for="i in 5" :key="i" :to="{ name: `${props.type}`, params: { page: props.page + i - 1 } }">{{ props.page + i - 1 }}</RouterLink>
+      <RouterLink :to="{ name: `${props.type}`, params: { page: props.page + 1 } }">Next</RouterLink>
     </div>
   </div>
+
 </template>
 <script setup lang="ts">
 // Get page story
@@ -21,17 +40,40 @@ const props = defineProps<{
 
 
 
+
 const logger = createLogger('[NewsView]')
 const route = useRoute();
 
-logger.debug('route', route)
+logger.debug('route', route.path)
 const store = useHnewsStore()
 
-const items = computed(() => store.getItemsByType(props.type))
+const items = computed(() => store.getItemsByType(props.type, props.page))
 
 watchEffect(() => {
   store.fetchListPage(props.type, props.page)
 })
 
 logger.debug('items', items.value)
+
+
+defineExpose({
+  path: route.path
+})
 </script>
+<style scoped>
+a{
+  background-color: var(--color-slate-800);
+  padding: 2px 4px;
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+a:hover {
+  background-color: var(--color-slate-700);
+}
+
+
+.router-link-exact-active {
+  background-color: var(--color-slate-700);
+}
+</style>

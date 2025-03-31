@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="min-h-9">
     <StoryItem v-if="item">
       <template #index>
         {{ props.index }}
@@ -28,6 +28,9 @@
         {{ useTimeAgo(new Date(item.created_at)) }}
       </template>
     </StoryItem>
+    <div v-else class="h-80 bg-green-400">
+
+    </div>
   </div>
 </template>
 <script setup lang="ts">
