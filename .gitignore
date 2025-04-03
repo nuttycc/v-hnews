@@ -31,3 +31,4 @@ coverage
 
 # Sentry Config File
 .env.sentry-build-plugin
+.lingma/rules/project_rule.md

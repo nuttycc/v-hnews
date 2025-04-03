@@ -1,8 +1,8 @@
-name: Optimized Deploy
+name: Deploy Vue App to GitHub Pages
 
 on:
   push:
-    branches: [dev]
+    branches: [dev, main]
   workflow_dispatch:
 
 permissions:
@@ -13,52 +13,116 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 8
+
+      - name: Install dependencies
+        if: steps.changes.outputs.build_needed == 'true' || github.event_name == 'workflow_dispatch'
+        run: pnpm install
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ github.ref_name }}-node-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ github.ref_name }}-node-modules-
+            ${{ runner.os }}-node-modules-
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ github.ref_name }}-node-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ github.ref_name }}-node-modules-
+            ${{ runner.os }}-node-modules-
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ github.ref_name }}-node-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ github.ref_name }}-node-modules-
+            ${{ runner.os }}-node-modules-
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ github.ref_name }}-node-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ github.ref_name }}-node-modules-
+            ${{ runner.os }}-node-modules-
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'pnpm'
 
-      - name: Cache build
-        uses: actions/cache@v3
+      - name: Cache pnpm store
+        uses: actions/cache@v4
         with:
-          path: |
-            dist
-            node_modules/.vite
-          key: ${{ runner.os }}-vite-build-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx', '**/*.vue') }}
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-vite-build-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            pnpm-store-${{ runner.os }}-
+
+      - name: Cache Vite build cache
+        uses: actions/cache@v4
+        with:
+          path: .vite
+          key: vite-cache-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'vite.config.*') }}
+          restore-keys: |
+            vite-cache-${{ runner.os }}-
+
+      - name: Check for source changes
+        id: changes
+        run: |
+          echo "Checking for source changes..."
+          git fetch origin main
+          CHANGED=$(git diff --name-only origin/main HEAD -- src/ package.json pnpm-lock.yaml vite.config.*)
+          echo "Changed files: $CHANGED"
+          if [ -z "$CHANGED" ]; then
+            echo "skip_build=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip_build=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Install dependencies
+        if: steps.changes.outputs.skip_build == 'false'
         run: pnpm install
-        env:
-          HUSKY: 0
 
-      - name: Create Sentry release
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: 'envious'
-          SENTRY_PROJECT: 'javascript-vue'
-        run: |
-          # 创建 .env.sentry-build-plugin 文件
-          echo "SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN" > .env.sentry-build-plugin
-
-      - name: Build
+      - name: Build Vue app
+        if: steps.changes.outputs.skip_build == 'false'
         run: pnpm build
         env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          NODE_ENV: production
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Verify build output
+        if: steps.changes.outputs.skip_build == 'false'
+        run: |
+          if [ ! -d dist ] || [ -z "$(ls -A dist)" ]; then
+            echo "Build output directory 'dist' is missing or empty!"
+            exit 1
+          fi
+
+      - name: Upload build artifact
+        if: steps.changes.outputs.skip_build == 'false'
+        id: upload
+        uses: actions/upload-artifact@v4
         with:
+          name: vue-dist
           path: dist
 
   deploy:
@@ -68,6 +132,42 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: vue-dist
+          path: dist
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Show deployed GitHub Pages URL
+        run: |
+          echo "Deployed to: ${{ steps.deployment.outputs.page_url }}"
+
+      - name: Add deployment URL to summary
+        run: |
+          echo "### 🚀 部署成功: ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Purge CDN cache
+        env:
+          CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          if [ -z "$CF_ZONE_ID" ] || [ -z "$CF_API_TOKEN" ]; then
+            echo "Cloudflare credentials not set, skipping CDN purge."
+            exit 0
+          fi
+          curl -X POST "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/purge_cache" \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}'

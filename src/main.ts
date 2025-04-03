@@ -6,6 +6,16 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import * as Sentry from '@sentry/vue'
+import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 15,
+      refetchOnWindowFocus: true,
+    },
+  },
+})
 
 const app = createApp(App)
 
@@ -16,5 +26,5 @@ Sentry.init({
 
 app.use(createPinia())
 app.use(router)
-
+app.use(VueQueryPlugin, { queryClient })
 app.mount('#app')

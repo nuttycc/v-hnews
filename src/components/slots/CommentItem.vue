@@ -17,7 +17,7 @@
       </div>
     </footer>
     <main>
-      <div class="text-sm leading-relaxed text-pretty text-gray-800 dark:text-gray-200">
+      <div>
         <slot name="text"></slot>
       </div>
       <div>
@@ -27,21 +27,4 @@
   </article>
 </template>
 <script setup lang="ts"></script>
-<style scoped>
-pre,
-code {
-  max-width: 100%;
-  overflow-x: auto;
-  background-color: #f3f4f6;
-  padding: 0.25rem;
-  font-size: 0.875rem;
-  border-radius: 0.25rem;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-}
-
-.dark pre,
-.dark code {
-  background-color: #1f2937;
-}
-</style>
+<style module></style>
