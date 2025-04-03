@@ -1,6 +1,6 @@
 <template>
   <article
-    class="flex min-w-lg flex-row items-center gap-4 overflow-hidden text-nowrap text-ellipsis"
+    class="flex flex-row items-center gap-4 overflow-hidden text-nowrap text-ellipsis md:min-w-lg"
     tabindex="0"
   >
     <header class="left min-w-4">
@@ -18,7 +18,7 @@
         <slot name="footer-comments"></slot>
         <slot name="footer-points"></slot>
 
-        <span class="ml-3 text-xs dark:text-gray-300">
+        <span class="ml-3 overflow-hidden text-xs text-nowrap text-ellipsis dark:text-gray-300">
           <slot name="footer-time"></slot>
         </span>
       </footer>

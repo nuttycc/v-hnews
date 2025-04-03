@@ -13,8 +13,8 @@
     <div v-else>
       <div v-for="i in 20" :key="i">
         <div class="mb-1 flex h-9 animate-pulse flex-col gap-1">
-          <div class="h-1/3 w-52 dark:bg-slate-600"></div>
-          <div class="h-1/3 w-80 dark:bg-slate-600"></div>
+          <div class="h-1/3 md:w-52 dark:bg-slate-600"></div>
+          <div class="h-1/3 md:w-80 dark:bg-slate-600"></div>
         </div>
       </div>
     </div>
