@@ -5,7 +5,7 @@
       :max="1"
       :class="['h-0.5 w-full', items.length === HITS_PER_PAGE ? 'hidden' : 'block']"
     ></progress>
-    <div v-if="items.length > 0" class="flex flex-col gap-3">
+    <div v-if="items.length > 10" class="min-h-50dvh flex flex-col gap-3">
       <div v-for="(item, i) in items" :key="item.id">
         <TheStory :id="item.id" :index="(page - 1) * HITS_PER_PAGE + i + 1" />
       </div>
@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <div class="pagination mt-4 flex flex-row gap-1">
+    <div v-if="items.length > 10" class="pagination mt-4 flex flex-row gap-1">
       <RouterLink :to="{ name: `${props.type}`, params: { page: props.page - 1 } }"
         >Previous</RouterLink
       >
