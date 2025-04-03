@@ -22,6 +22,6 @@ const store = useHnewsStore()
 const item = computed(() => store.getItemById(props.id))
 
 watchEffect(() => {
-  store.fetchItemByID(props.id)
+  store.fetchItemById(props.id)
 })
 </script>
