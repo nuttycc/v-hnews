@@ -16,7 +16,7 @@
       </template>
 
       <template #text>
-        <div v-html="item.text"></div>
+        <div v-html="item.text" class="comment-x"></div>
       </template>
 
       <template #children v-if="isToggle">
@@ -32,22 +32,38 @@
 </template>
 
 <script setup lang="ts">
-import { useHnewsStore } from '@/stores/hnews'
 import CommentItem from './slots/CommentItem.vue'
 import { computed, watchEffect, ref } from 'vue'
 import { useTimeAgo } from '@vueuse/core'
 import { Icon } from '@iconify/vue'
+import { useQuery } from '@tanstack/vue-query'
+import { fetchItem } from '@/lib/fetch'
 
 const props = defineProps<{
   id: number
   rIndex: number
 }>()
 
-const store = useHnewsStore()
-const item = computed(() => store.getItemById(props.id))
 const isToggle = ref<boolean>(false)
+const itemId = computed(() => props.id)
 
-watchEffect(() => {
-  store.fetchItemById(props.id)
+const { data: item } = useQuery({
+  queryKey: ['comment', itemId],
+  queryFn: () => fetchItem(itemId.value),
 })
 </script>
+
+<style>
+.comment-x pre,
+.comment-x code {
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.comment-x {
+  overflow-wrap: anywhere;
+
+  text-wrap: pretty;
+}
+</style>

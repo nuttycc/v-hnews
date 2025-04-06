@@ -7,7 +7,7 @@ export const ALGOLIA_BASE_URL = 'https://hn.algolia.com/api/v1/'
 
 export const HITS_PER_PAGE = 20
 
-export const storyTypes = ['new', 'top', 'best', 'ask', 'show', 'job'] as const
+export const storyTypes = ['new', 'top', 'best', 'ask', 'show'] as const
 export type StoryType = (typeof storyTypes)[number]
 
 export interface ALGOItem {
