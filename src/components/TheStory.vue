@@ -2,7 +2,7 @@
   <div class="min-h-9">
     <StoryItem v-if="item">
       <template #index>
-        <a :href="`#${props.id}`">
+        <a :href="`#${item.id}`">
           {{ props.index }}
         </a>
       </template>
@@ -48,16 +48,18 @@
 </template>
 <script setup lang="ts">
 // Show one story
-import { useHnewsStore } from '@/stores/hnews'
+import { useHnewsStore, type ALGOItem } from '@/stores/hnews'
 import { computed, watchEffect } from 'vue'
 import StoryItem from './slots/StoryItem.vue'
 import { useTimeAgo } from '@vueuse/core'
 import { RouterLink } from 'vue-router'
 import { Icon } from '@iconify/vue/dist/iconify.js'
-const props = defineProps<{ id: number; index: string | number }>()
+
+const props = defineProps<{ item: ALGOItem; index: string | number }>()
 const store = useHnewsStore()
 
-const item = computed(() => store.getItemById(props.id))
+const item = computed(() => props.item)
+
 const totalComments = computed(() => store.getTotalCommentCount(item.value))
 const faviconUrl = computed(() => {
   if (!item.value?.url) return ''
@@ -74,10 +76,6 @@ function handleImageError(event: Event) {
     target.src = 'https://www.google.com/s2/favicons?domain=' + new URL(item.value.url).hostname
   }
 }
-
-watchEffect(() => {
-  store.fetchItemById(props.id)
-})
 </script>
 
 <style lang="css" scoped></style>

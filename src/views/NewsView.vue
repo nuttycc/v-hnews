@@ -1,88 +1,102 @@
 <template>
-  <div class="flex flex-col">
-    <progress
-      :value="items.length / HITS_PER_PAGE"
-      :max="1"
-      :class="['h-0.5 w-full', items.length === HITS_PER_PAGE ? 'hidden' : 'block']"
-    ></progress>
-    <div v-if="items.length > 10" class="min-h-50dvh flex flex-col gap-3">
-      <div v-for="(item, i) in items" :key="item.id">
-        <TheStory :id="item.id" :index="(page - 1) * HITS_PER_PAGE + i + 1" />
+  <div>
+    <h1>Hacker News</h1>
+    <div v-if="items.length > 0">
+      <div v-for="item in items" :key="item.id">
+        <TheStory :item="item" :index="0" />
       </div>
     </div>
-    <div v-else>
-      <div v-for="i in 20" :key="i">
-        <div class="mb-1 flex h-9 animate-pulse flex-col gap-1">
-          <div class="h-1/3 md:w-52 dark:bg-slate-600"></div>
-          <div class="h-1/3 md:w-80 dark:bg-slate-600"></div>
-        </div>
-      </div>
+    <div v-if="hasNextPage && !isFetchingNextPage" class="flex items-center justify-center">
+      <div ref="observer-target" class="h-8 bg-amber-400"></div>
     </div>
-
-    <div v-if="items.length > 10" class="pagination mt-4 flex flex-row gap-1">
-      <RouterLink :to="{ name: `${props.type}`, params: { page: props.page - 1 } }"
-        >Previous</RouterLink
-      >
-      <RouterLink v-if="props.page > 1" :to="{ name: `${props.type}`, params: { page: 1 } }"
-        >1</RouterLink
-      >
-      <span v-if="props.page > 2">...</span>
-      <RouterLink
-        v-for="i in 5"
-        :key="i"
-        :to="{ name: `${props.type}`, params: { page: props.page + i - 1 } }"
-        >{{ props.page + i - 1 }}</RouterLink
-      >
-      <RouterLink :to="{ name: `${props.type}`, params: { page: props.page + 1 } }"
-        >Next</RouterLink
-      >
+    <div
+      v-if="isLoadingIds || isLoadingItems || isFetching || isFetchingNextPage"
+      class="flex size-40 items-center justify-center"
+    >
+      <div
+        class="h-32 w-32 animate-spin rounded-full border-t-2 border-b-2 border-gray-900 dark:border-white"
+      ></div>
+    </div>
+    <div v-else-if="isErrorIds || isErrorItems" class="flex h-screen items-center justify-center">
+      <div class="text-2xl font-bold text-red-500">
+        Error: {{ errorIds?.message || errorItems?.message }}
+      </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-// Get page story
+import { useQuery, useInfiniteQuery } from '@tanstack/vue-query'
+import { fetchListIds, fetchItems } from '@/lib/fetch'
+import type { StoryType } from '@/stores/hnews'
+import { computed, onMounted, useTemplateRef } from 'vue'
+import { useIntersectionObserver } from '@vueuse/core'
 import TheStory from '@/components/TheStory.vue'
-import createLogger from '@/lib/slogger'
-import { HITS_PER_PAGE, useHnewsStore, type StoryType } from '@/stores/hnews'
-import { computed, watchEffect } from 'vue'
-import { useRoute } from 'vue-router'
 
+const HITS_PER_PAGE = 10
+
+const observerTarget = useTemplateRef('observer-target')
 const props = defineProps<{
   type: StoryType
-  page: number
 }>()
 
-const logger = createLogger('[NewsView]')
-const route = useRoute()
+const type = computed(() => props.type)
 
-logger.debug('route', route.path)
-const store = useHnewsStore()
-
-const items = computed(() => store.getItemsByType(props.type, props.page))
-
-watchEffect(() => {
-  store.fetchListPage(props.type, props.page)
+const {
+  isLoading: isLoadingIds,
+  isError: isErrorIds,
+  data: dataIds,
+  error: errorIds,
+} = useQuery({
+  queryKey: ['listIds', type],
+  queryFn: () => fetchListIds(type.value),
+  staleTime: 1000 * 60 * 5,
+  refetchOnWindowFocus: false,
 })
 
-logger.debug('items', items.value)
+const {
+  isLoading: isLoadingItems,
+  isError: isErrorItems,
+  data: dataItems,
+  error: errorItems,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+  isFetching,
+} = useInfiniteQuery({
+  queryKey: ['listItems', type, dataIds],
+  queryFn: ({ pageParam = 0 }) => {
+    if (!dataIds.value) {
+      throw new Error('No data ids')
+    }
+    const start = pageParam * HITS_PER_PAGE
+    const end = start + HITS_PER_PAGE
+    return fetchItems(dataIds.value.slice(start, end))
+  },
+  getNextPageParam: (lastPage, pages) => {
+    return lastPage.length > 0 ? pages.length + 1 : undefined
+  },
+  initialPageParam: 0,
+  staleTime: 1000 * 60 * 5,
+  refetchOnWindowFocus: false,
+})
 
-defineExpose({
-  path: route.path,
+const items = computed(() => {
+  return dataItems.value?.pages.flatMap((page) => page) || []
+})
+
+onMounted(() => {
+  useIntersectionObserver(
+    observerTarget,
+    ([{ isIntersecting }]) => {
+      if (isIntersecting) {
+        if (!isFetchingNextPage && hasNextPage) {
+          fetchNextPage()
+        }
+      }
+    },
+    {
+      threshold: 0.5,
+    },
+  )
 })
 </script>
-<style scoped>
-a {
-  background-color: var(--color-slate-800);
-  padding: 2px 4px;
-  border-radius: 4px;
-  text-decoration: none;
-}
-
-a:hover {
-  background-color: var(--color-slate-700);
-}
-
-.router-link-exact-active {
-  background-color: var(--color-slate-700);
-}
-</style>
