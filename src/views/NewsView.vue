@@ -1,20 +1,30 @@
 <template>
   <div>
-    <h1>Hacker News</h1>
-    <div v-if="items.length > 0">
-      <div v-for="item in items" :key="item.id">
-        <TheStory :item="item" :index="0" />
+    <h1 class="hidden">Hacker News</h1>
+    <div v-if="items.length > 0" ref="virtualParent" class="w-full overflow-auto">
+      <div class="relative w-full" :style="{ height: `${totalSize}px` }">
+        <div
+          v-for="virtualRow in virtualRows"
+          :key="virtualRow.index"
+          class="absolute top-0 left-0 w-full"
+          :style="{
+            height: `${virtualRow.size}px`,
+            transform: `translateY(${virtualRow.start}px)`,
+          }"
+        >
+          <TheStory :item="items[virtualRow.index]" :index="virtualRow.index" />
+        </div>
       </div>
     </div>
-    <div v-if="hasNextPage && !isFetchingNextPage" class="flex items-center justify-center">
-      <div ref="observer-target" class="h-8 bg-amber-400"></div>
-    </div>
+    <!-- <div v-if="hasNextPage && !isFetchingNextPage">
+      <div ref="observer-target" class="h-4 bg-amber-400"></div>
+    </div> -->
     <div
       v-if="isLoadingIds || isLoadingItems || isFetching || isFetchingNextPage"
-      class="flex size-40 items-center justify-center"
+      class="mt-1 mb-10 flex items-center justify-center"
     >
       <div
-        class="h-32 w-32 animate-spin rounded-full border-t-2 border-b-2 border-gray-900 dark:border-white"
+        class="h-16 w-16 animate-spin rounded-full border-t-2 border-b-2 border-gray-900 dark:border-white"
       ></div>
     </div>
     <div v-else-if="isErrorIds || isErrorItems" class="flex h-screen items-center justify-center">
@@ -28,13 +38,14 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/vue-query'
 import { fetchListIds, fetchItems } from '@/lib/fetch'
 import type { StoryType } from '@/stores/hnews'
-import { computed, onMounted, useTemplateRef } from 'vue'
-import { useIntersectionObserver } from '@vueuse/core'
+import { computed, watchEffect } from 'vue'
 import TheStory from '@/components/TheStory.vue'
+import { useWindowVirtualizer, type VirtualizerOptions } from '@tanstack/vue-virtual'
+import createLogger from '@/lib/slogger'
 
-const HITS_PER_PAGE = 10
+const logger = createLogger('[NewsView]')
+const HITS_PER_PAGE = 20
 
-const observerTarget = useTemplateRef('observer-target')
 const props = defineProps<{
   type: StoryType
 }>()
@@ -76,27 +87,34 @@ const {
     return lastPage.length > 0 ? pages.length + 1 : undefined
   },
   initialPageParam: 0,
-  staleTime: 1000 * 60 * 5,
-  refetchOnWindowFocus: false,
 })
 
 const items = computed(() => {
   return dataItems.value?.pages.flatMap((page) => page) || []
 })
 
-onMounted(() => {
-  useIntersectionObserver(
-    observerTarget,
-    ([{ isIntersecting }]) => {
-      if (isIntersecting) {
-        if (!isFetchingNextPage && hasNextPage) {
-          fetchNextPage()
-        }
-      }
-    },
-    {
-      threshold: 0.5,
-    },
-  )
+const rowVirtualizerOptions = computed(() => {
+  return {
+    count: hasNextPage ? items.value.length + 1 : items.value.length,
+    estimateSize: () => 55,
+    overscan: 3,
+    debug: import.meta.env.DEV,
+  }
+})
+
+const rowVirtualizer = useWindowVirtualizer(rowVirtualizerOptions)
+const virtualRows = computed(() => rowVirtualizer.value.getVirtualItems())
+const totalSize = computed(() => rowVirtualizer.value.getTotalSize())
+
+watchEffect(() => {
+  const [lastItem] = [...virtualRows.value].reverse()
+  if (!lastItem) return
+
+  logger.debug(`'Last item:', ${lastItem.index}--${items.value.length}`)
+
+  if (lastItem.index >= items.value.length - 1 && hasNextPage.value && !isFetchingNextPage.value) {
+    fetchNextPage()
+    logger.debug('Fetching next page...')
+  }
 })
 </script>

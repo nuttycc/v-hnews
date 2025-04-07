@@ -37,17 +37,19 @@ import CommentItem from './slots/CommentItem.vue'
 import { computed, watchEffect, ref } from 'vue'
 import { useTimeAgo } from '@vueuse/core'
 import { Icon } from '@iconify/vue'
+import { useQuery } from '@tanstack/vue-query'
+import { fetchItem } from '@/lib/fetch'
 
 const props = defineProps<{
   id: number
   rIndex: number
 }>()
 
-const store = useHnewsStore()
-const item = computed(() => store.getItemById(props.id))
 const isToggle = ref<boolean>(false)
+const itemId = computed(() => props.id)
 
-watchEffect(() => {
-  store.fetchItemById(props.id)
+const { data: item } = useQuery({
+  queryKey: ['comment', itemId],
+  queryFn: () => fetchItem(itemId.value),
 })
 </script>

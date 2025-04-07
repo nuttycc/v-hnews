@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
 import { storyTypes } from './stores/hnews.ts'
 // import TheCounter from "./components/base/TheCounter.vue";
 import { useRoute } from 'vue-router'
@@ -27,6 +28,7 @@ console.log(route.path)
     <!-- <TheCounter /> -->
     <hr class="mb-2" />
   </header>
+  <VueQueryDevtools />
 
   <RouterView />
 </template>

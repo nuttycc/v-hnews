@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-9">
-    <StoryItem v-if="item">
+    <StoryItem v-if="item" class="flex">
       <template #index>
         <a :href="`#${item.id}`">
           {{ props.index }}
@@ -12,7 +12,7 @@
           v-if="item.url"
           :href="item.url"
           target="_blank"
-          :id="`${props.id}`"
+          :id="`${item.id}`"
           class="leading-7 font-semibold hover:underline"
         >
           {{ item.title }}
@@ -23,7 +23,14 @@
       </template>
 
       <template #footer-icon>
-        <img v-if="faviconUrl" :src="faviconUrl" alt="site favicon" @error="handleImageError" />
+        <img
+          v-if="faviconUrl"
+          :src="faviconUrl"
+          alt="site favicon"
+          @error="handleImageError"
+          loading="lazy"
+          class="size-4 rounded-sm object-contain dark:bg-gray-900"
+        />
         <Icon v-else icon="mdi:link" />
       </template>
       <template #footer-by>
@@ -43,7 +50,6 @@
         {{ useTimeAgo(new Date(item.created_at)) }}
       </template>
     </StoryItem>
-    <div v-else class="h-80 bg-green-400"></div>
   </div>
 </template>
 <script setup lang="ts">
@@ -64,7 +70,7 @@ const totalComments = computed(() => store.getTotalCommentCount(item.value))
 const faviconUrl = computed(() => {
   if (!item.value?.url) return ''
   try {
-    return `https://favicon.im/${new URL(item.value.url).hostname}`
+    return 'https://www.google.com/s2/favicons?domain=' + new URL(item.value.url).hostname
   } catch {
     return ''
   }
@@ -73,7 +79,7 @@ const faviconUrl = computed(() => {
 function handleImageError(event: Event) {
   const target = event.target as HTMLImageElement
   if (item.value?.url) {
-    target.src = 'https://www.google.com/s2/favicons?domain=' + new URL(item.value.url).hostname
+    target.src = `https://favicon.im/${new URL(item.value.url).hostname}`
   }
 }
 </script>

@@ -11,9 +11,6 @@
         <slot name="title"></slot>
       </main>
       <footer class="flex w-full flex-row items-center gap-1 text-sm">
-        <div class="h-4 w-4">
-          <slot name="footer-icon"></slot>
-        </div>
         <slot name="footer-by"></slot>
         <slot name="footer-comments"></slot>
         <slot name="footer-points"></slot>

@@ -48,8 +48,8 @@ jobs:
           SENTRY_ORG: 'envious'
           SENTRY_PROJECT: 'javascript-vue'
         run: |
-          # 创建 .env.sentry-build-plugin 文件
-          echo "SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN" > .env.sentry-build-plugin
+          # Create .env.sentry-build-plugin file
+          echo "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}" > .env.sentry-build-plugin
 
       - name: Build
         run: pnpm build
@@ -71,3 +71,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
