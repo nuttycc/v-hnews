@@ -2,7 +2,7 @@ name: Vue App Deploy to GitHub Pages
 
 on:
   push:
-    branches: [dev, main]
+    branches: [main]
     paths-ignore:
       - '**.md'
       - 'docs/**'
@@ -24,13 +24,15 @@ jobs:
       - name: Check if build is needed
         id: changes
         run: |
-          git fetch origin ${{ github.ref_name }} --depth=1 || true
+          echo "Fetching origin/${{ github.ref_name }}"
+          git fetch origin ${{ github.ref_name }} --depth=1
+          echo "Changed files:"
+          git diff --name-only origin/${{ github.ref_name }} || true
           if git diff --name-only origin/${{ github.ref_name }} | grep -E 'src/|package.json|pnpm-lock.yaml|vite.config.ts|tsconfig.*\.json|\.env.*|public/'; then
             echo "build_needed=true" >> $GITHUB_OUTPUT
           else
             echo "build_needed=false" >> $GITHUB_OUTPUT
           fi
-      - uses: actions/checkout@v4
 
       - name: Cache pnpm store
         uses: actions/cache@v4
@@ -47,7 +49,7 @@ jobs:
           version: 8
 
       - name: Install dependencies
-        if: steps.changes.outputs.build_needed == 'true'
+        if: steps.changes.outputs.build_needed == 'true' || github.event_name == 'workflow_dispatch'
         run: pnpm install
 
       - name: Cache node_modules
@@ -77,16 +79,17 @@ jobs:
             ${{ runner.os }}-${{ github.ref_name }}-vite-
 
       - name: Build
-        if: steps.changes.outputs.build_needed == 'true'
+        if: steps.changes.outputs.build_needed == 'true' || github.event_name == 'workflow_dispatch'
         run: pnpm build
         env:
+          NODE_ENV: production
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Upload sourcemaps to Sentry
         if: steps.changes.outputs.build_needed == 'true'
         uses: getsentry/action-release@v1
         with:
-          environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+          environment: 'production'
           sourcemaps: ./dist
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -94,38 +97,23 @@ jobs:
           SENTRY_PROJECT: javascript-vue
 
       - name: Upload pages artifact
-        if: steps.changes.outputs.build_needed == 'true'
+        if: steps.changes.outputs.build_needed == 'true' || github.event_name == 'workflow_dispatch'
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+          retention-days: 1
 
-      - name: Upload build artifact
-        if: steps.changes.outputs.build_needed == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-${{ github.ref_name }}
-          path: dist
 
-  deploy-dev:
-    if: github.ref == 'refs/heads/dev' && needs.build.outputs.build_needed == 'true'
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    steps:
-      - name: Deploy to Dev GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
 
   deploy-prod:
-    if: github.ref == 'refs/heads/main' && needs.build.outputs.build_needed == 'true'
+    if: github.ref == 'refs/heads/main' && (needs.build.outputs.build_needed == 'true' || github.event_name == 'workflow_dispatch')
     needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ github.server_url }}/${{ github.repository }}
+      url: https://nuttycc.github.io/v-hnews/
     steps:
       - name: Deploy to Prod GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
