@@ -27,7 +27,7 @@ jobs:
       - name: Setup pnpm and install dependencies
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 8
           run_install: true
 
       - name: Setup Node.js
@@ -46,21 +46,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-vite-build-${{ hashFiles('**/pnpm-lock.yaml') }}-
 
-      - name: Create and finalize Sentry release
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: 'envious'
-          SENTRY_PROJECT: 'javascript-vue'
-        run: |
-          export SENTRY_RELEASE=$(sentry-cli releases propose-version)
-          sentry-cli releases new $SENTRY_RELEASE
-          sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps ./dist --rewrite
-          sentry-cli releases finalize $SENTRY_RELEASE
-
       - name: Build
         run: pnpm build
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
+      - name: Upload sourcemaps to Sentry
+        uses: getsentry/action-release@v1
+        with:
+          environment: production
+          sourcemaps: ./dist
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: envious
+          SENTRY_PROJECT: javascript-vue
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
