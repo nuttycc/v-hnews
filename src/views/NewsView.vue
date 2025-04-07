@@ -3,22 +3,28 @@
     <div v-if="items.length > 0" ref="virtualParent">
       <div class="relative w-full" :style="{ height: `${totalSize}px` }">
         <div
-          v-for="virtualRow in virtualRows"
-          :key="virtualRow.index"
-          class="absolute top-0 left-0 w-full"
           :style="{
-            height: `${virtualRow.size}px`,
-            transform: `translateY(${virtualRow.start}px)`,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            transform: `translateY(${
+              virtualRows[0]?.start - rowVirtualizer.options.scrollMargin
+            }px)`,
           }"
         >
-          <TheStory :item="items[virtualRow.index]" :index="virtualRow.index" />
+          <div
+            v-for="virtualRow in virtualRows"
+            :key="virtualRow.index"
+            :data-index="virtualRow.index"
+            :ref="measureElement"
+          >
+            <TheStory :item="items[virtualRow.index]" :index="virtualRow.index" />
+          </div>
         </div>
       </div>
     </div>
-    <div
-      v-if="isLoadingIds || isLoadingItems || isFetching || isFetchingNextPage"
-      class="mt-4 flex flex-col gap-2"
-    >
+    <div v-if="isLoadingIds || isLoadingItems" class="mt-2 flex flex-col gap-2">
       <div
         v-for="i in [...Array(10).keys()]"
         :key="i"
@@ -39,7 +45,7 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/vue-query'
 import { fetchListIds, fetchItems } from '@/lib/fetch'
 import type { StoryType } from '@/stores/hnews'
-import { computed, watchEffect } from 'vue'
+import { computed, onMounted, ref, useTemplateRef, watchEffect } from 'vue'
 import TheStory from '@/components/TheStory.vue'
 import { useWindowVirtualizer, type VirtualizerOptions } from '@tanstack/vue-virtual'
 import createLogger from '@/lib/slogger'
@@ -94,11 +100,19 @@ const items = computed(() => {
   return dataItems.value?.pages.flatMap((page) => page) || []
 })
 
+const virtualParent = useTemplateRef('virtualParent')
+const parentOffsetRef = ref(0)
+
+onMounted(() => {
+  parentOffsetRef.value = virtualParent.value?.offsetTop ?? 0
+})
+
 const rowVirtualizerOptions = computed(() => {
   return {
     count: hasNextPage ? items.value.length + 1 : items.value.length,
-    estimateSize: () => 55,
+    estimateSize: () => 65,
     overscan: 3,
+    scrollMargin: parentOffsetRef.value,
     debug: import.meta.env.DEV,
   }
 })
@@ -118,4 +132,14 @@ watchEffect(() => {
     logger.debug('Fetching next page...')
   }
 })
+
+const measureElement = (el: Element) => {
+  if (!el) {
+    return
+  }
+
+  rowVirtualizer.value.measureElement(el)
+
+  return undefined
+}
 </script>

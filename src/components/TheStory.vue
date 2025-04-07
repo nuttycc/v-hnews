@@ -13,11 +13,11 @@
           :href="item.url"
           target="_blank"
           :id="`${item.id}`"
-          class="pr-4 leading-7 font-semibold hover:underline"
+          class="hover:underline"
         >
           {{ item.title }}
         </a>
-        <RouterLink v-else :to="`/item/${item.id}`" class="leading-7 font-semibold hover:underline">
+        <RouterLink v-else :to="`/item/${item.id}`" class="hover:underline">
           {{ item.title }}
         </RouterLink>
       </template>
@@ -59,7 +59,7 @@
 <script setup lang="ts">
 // Show one story
 import { useHnewsStore, type ALGOItem } from '@/stores/hnews'
-import { computed, watchEffect } from 'vue'
+import { computed } from 'vue'
 import StoryItem from './slots/StoryItem.vue'
 import { useTimeAgo } from '@vueuse/core'
 import { RouterLink } from 'vue-router'
