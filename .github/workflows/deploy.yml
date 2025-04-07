@@ -2,7 +2,10 @@ name: Vue App Deploy to GitHub Pages
 
 on:
   push:
-    branches: [dev]
+    branches: [dev, main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   workflow_dispatch:
 
 permissions:
@@ -13,22 +16,47 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      build_needed: ${{ steps.changes.outputs.build_needed }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check if build is needed
+        id: changes
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1 || true
+          if git diff --name-only origin/${{ github.base_ref }} | grep -E 'src/|package.json|pnpm-lock.yaml'; then
+            echo "build_needed=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_needed=false" >> $GITHUB_OUTPUT
+          fi
+      - uses: actions/checkout@v4
+
 
       - name: Cache pnpm store
         uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-${{ github.ref_name }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
+            ${{ runner.os }}-${{ github.ref_name }}-pnpm-store-
             ${{ runner.os }}-pnpm-store-
 
       - name: Setup pnpm and install dependencies
+        if: steps.changes.outputs.build_needed == 'true'
         uses: pnpm/action-setup@v4
         with:
           version: 8
           run_install: true
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ github.ref_name }}-node-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ github.ref_name }}-node-modules-
+            ${{ runner.os }}-node-modules-
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -42,11 +70,13 @@ jobs:
         with:
           path: |
             node_modules/.vite
-          key: ${{ runner.os }}-vite-build-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx', '**/*.vue') }}
+          key: ${{ runner.os }}-${{ github.ref_name }}-vite-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('src/**/*.[jt]s', 'src/**/*.[jt]sx', 'src/**/*.vue') }}
           restore-keys: |
-            ${{ runner.os }}-vite-build-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            ${{ runner.os }}-${{ github.ref_name }}-vite-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            ${{ runner.os }}-${{ github.ref_name }}-vite-
 
       - name: Build
+        if: steps.changes.outputs.build_needed == 'true'
         run: pnpm build
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
@@ -54,25 +84,44 @@ jobs:
       - name: Upload sourcemaps to Sentry
         uses: getsentry/action-release@v1
         with:
-          environment: production
+          environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
           sourcemaps: ./dist
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: envious
           SENTRY_PROJECT: javascript-vue
 
-      - name: Upload artifact
+      - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
-  deploy:
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ github.ref_name }}
+          path: dist
+
+  deploy-dev:
+    if: github.ref == 'refs/heads/dev'
     needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy to Dev GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ github.server_url }}/${{ github.repository }}
+    steps:
+      - name: Deploy to Prod GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
