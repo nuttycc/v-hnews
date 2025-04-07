@@ -59,24 +59,6 @@ jobs:
             ${{ runner.os }}-${{ github.ref_name }}-node-modules-
             ${{ runner.os }}-node-modules-
 
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-${{ github.ref_name }}-node-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ github.ref_name }}-node-modules-
-            ${{ runner.os }}-node-modules-
-
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-${{ github.ref_name }}-node-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ github.ref_name }}-node-modules-
-            ${{ runner.os }}-node-modules-
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
