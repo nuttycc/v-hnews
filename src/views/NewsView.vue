@@ -52,7 +52,6 @@ import createLogger from '@/lib/slogger'
 
 const logger = createLogger('[NewsView]')
 
-const logger = createLogger('[NewsView]')
 const HITS_PER_PAGE = 20
 
 const props = defineProps<{
