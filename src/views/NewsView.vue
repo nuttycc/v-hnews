@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="items.length > 0" ref="virtualParent" class="w-full overflow-auto">
+    <div v-if="items.length > 0" ref="virtualParent">
       <div class="relative w-full" :style="{ height: `${totalSize}px` }">
         <div
           v-for="virtualRow in virtualRows"
@@ -17,7 +17,7 @@
     </div>
     <div
       v-if="isLoadingIds || isLoadingItems || isFetching || isFetchingNextPage"
-      class="mt-2 flex flex-col gap-2"
+      class="mt-4 flex flex-col gap-2"
     >
       <div
         v-for="i in [...Array(10).keys()]"
