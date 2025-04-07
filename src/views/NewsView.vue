@@ -16,9 +16,6 @@
         </div>
       </div>
     </div>
-    <!-- <div v-if="hasNextPage && !isFetchingNextPage">
-      <div ref="observer-target" class="h-4 bg-amber-400"></div>
-    </div> -->
     <div
       v-if="isLoadingIds || isLoadingItems || isFetching || isFetchingNextPage"
       class="mt-1 mb-10 flex items-center justify-center"
