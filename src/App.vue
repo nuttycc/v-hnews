@@ -2,15 +2,11 @@
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
 import { storyTypes } from './stores/hnews.ts'
 // import TheCounter from "./components/base/TheCounter.vue";
-import { useRoute } from 'vue-router'
-
-const route = useRoute()
-console.log(route.path)
 </script>
 
 <template>
   <header>
-    <nav class="mb-1 flex flex-row items-center justify-between gap-2 md:justify-start">
+    <nav class="mb-1 flex w-[80lvw] flex-row items-center justify-start gap-2 md:justify-start">
       <RouterLink
         v-for="type in storyTypes"
         :to="`/${type}/1`"

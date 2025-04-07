@@ -1,6 +1,5 @@
 <template>
   <div>
-    <h1 class="hidden">Hacker News</h1>
     <div v-if="items.length > 0" ref="virtualParent" class="w-full overflow-auto">
       <div class="relative w-full" :style="{ height: `${totalSize}px` }">
         <div
@@ -18,11 +17,16 @@
     </div>
     <div
       v-if="isLoadingIds || isLoadingItems || isFetching || isFetchingNextPage"
-      class="mt-1 mb-10 flex items-center justify-center"
+      class="mt-2 flex flex-col gap-2"
     >
       <div
-        class="h-16 w-16 animate-spin rounded-full border-t-2 border-b-2 border-gray-900 dark:border-white"
-      ></div>
+        v-for="i in [...Array(10).keys()]"
+        :key="i"
+        class="flex h-16 animate-pulse flex-col gap-1"
+      >
+        <div class="h-3/7 w-3xs rounded-sm md:w-md dark:bg-gray-500"></div>
+        <div class="h-4/7 w-xs rounded-sm md:w-xl dark:bg-gray-500"></div>
+      </div>
     </div>
     <div v-else-if="isErrorIds || isErrorItems" class="flex h-screen items-center justify-center">
       <div class="text-2xl font-bold text-red-500">

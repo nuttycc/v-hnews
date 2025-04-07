@@ -50,6 +50,10 @@
         {{ useTimeAgo(new Date(item.created_at)) }}
       </template>
     </StoryItem>
+    <div v-else class="flex h-16 animate-pulse flex-col gap-1">
+      <div class="h-3/7 w-3xs rounded-sm md:w-md dark:bg-gray-500"></div>
+      <div class="h-4/7 w-xs rounded-sm md:w-xl dark:bg-gray-500"></div>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
