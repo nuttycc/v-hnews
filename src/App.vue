@@ -10,7 +10,7 @@ console.log(route.path)
 
 <template>
   <header>
-    <nav class="mb-1 gap-2 md:flex md:flex-row">
+    <nav class="mb-1 flex flex-row items-center justify-between gap-2 md:justify-start">
       <RouterLink
         v-for="type in storyTypes"
         :to="`/${type}/1`"

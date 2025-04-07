@@ -1,5 +1,5 @@
 <template>
-  <div v-if="item" class="flex md:max-w-4xl md:flex-col">
+  <div v-if="item" class="flex max-w-lvw flex-col md:max-w-4xl">
     <TheStory :item="item" :id="item.id" :index="'⚓'" class="border p-2 dark:border-slate-700" />
 
     <div class="border dark:border-slate-700">

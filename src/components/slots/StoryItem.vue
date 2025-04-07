@@ -1,14 +1,13 @@
 <template>
-  <article
-    class="flex flex-row items-center gap-4 overflow-hidden text-nowrap text-ellipsis md:min-w-lg"
-    tabindex="0"
-  >
+  <article class="flex max-w-lvw flex-row items-center gap-4 md:min-w-lg" tabindex="0">
     <header class="left min-w-4">
       <slot name="index"></slot>
     </header>
     <div class="right flex flex-col">
-      <main class="text-pretty">
-        <slot name="title"></slot>
+      <main>
+        <div class="w-96 overflow-hidden pr-4 text-nowrap text-ellipsis md:w-fit md:text-pretty">
+          <slot name="title"></slot>
+        </div>
       </main>
       <footer class="flex w-full flex-row items-center gap-1 text-sm">
         <slot name="footer-by"></slot>

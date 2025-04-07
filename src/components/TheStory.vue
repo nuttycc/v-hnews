@@ -13,7 +13,7 @@
           :href="item.url"
           target="_blank"
           :id="`${item.id}`"
-          class="leading-7 font-semibold hover:underline"
+          class="pr-4 leading-7 font-semibold hover:underline"
         >
           {{ item.title }}
         </a>

@@ -16,7 +16,7 @@
       </template>
 
       <template #text>
-        <div v-html="item.text"></div>
+        <div v-html="item.text" class="comment-x"></div>
       </template>
 
       <template #children v-if="isToggle">
@@ -32,7 +32,6 @@
 </template>
 
 <script setup lang="ts">
-import { useHnewsStore } from '@/stores/hnews'
 import CommentItem from './slots/CommentItem.vue'
 import { computed, watchEffect, ref } from 'vue'
 import { useTimeAgo } from '@vueuse/core'
@@ -53,3 +52,18 @@ const { data: item } = useQuery({
   queryFn: () => fetchItem(itemId.value),
 })
 </script>
+
+<style>
+.comment-x pre,
+.comment-x code {
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.comment-x {
+  overflow-wrap: anywhere;
+
+  text-wrap: pretty;
+}
+</style>
