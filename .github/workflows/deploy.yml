@@ -1,4 +1,4 @@
-name: Optimized Deploy
+name: Vue App Deploy to GitHub Pages
 
 on:
   push:
@@ -16,40 +16,46 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
+      - name: Cache pnpm store
+        uses: actions/cache@v4
         with:
-          version: 8
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Setup pnpm and install dependencies
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Cache build
-        uses: actions/cache@v3
+      - name: Cache Vite build cache
+        uses: actions/cache@v4
         with:
           path: |
-            dist
             node_modules/.vite
           key: ${{ runner.os }}-vite-build-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx', '**/*.vue') }}
           restore-keys: |
             ${{ runner.os }}-vite-build-${{ hashFiles('**/pnpm-lock.yaml') }}-
 
-      - name: Install dependencies
-        run: pnpm install
-        env:
-          HUSKY: 0
-
-      - name: Create Sentry release
+      - name: Create and finalize Sentry release
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: 'envious'
           SENTRY_PROJECT: 'javascript-vue'
         run: |
-          # Create .env.sentry-build-plugin file
-          echo "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}" > .env.sentry-build-plugin
+          export SENTRY_RELEASE=$(sentry-cli releases propose-version)
+          sentry-cli releases new $SENTRY_RELEASE
+          sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps ./dist --rewrite
+          sentry-cli releases finalize $SENTRY_RELEASE
 
       - name: Build
         run: pnpm build
@@ -71,4 +77,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
