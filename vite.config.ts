@@ -11,27 +11,32 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig(({ mode }) => {
   // Check if building in Cloudflare Pages environment
   // process.env.CF_PAGES is set to '1' by Cloudflare Pages build environment
-  const isCloudflare = process.env.CF_PAGES === '1';
+  const isCloudflare = process.env.CF_PAGES === '1'
   // Set base URL dynamically
-  const base = isCloudflare ? '/' : '/v-hnews/'; // Use root for Cloudflare, specific path otherwise
+  const base = isCloudflare ? '/' : '/v-hnews/' // Use root for Cloudflare, specific path otherwise
 
   // Log the determined environment and base URL for verification during build
-  console.log(`[vite.config.ts] Building for: ${isCloudflare ? 'Cloudflare Pages' : 'Other (GitHub Pages/Local)'}`);
-  console.log(`[vite.config.ts] Setting base URL to: ${base}`);
+  console.log(
+    `[vite.config.ts] Building for: ${isCloudflare ? 'Cloudflare Pages' : 'Other (GitHub Pages/Local)'}`,
+  )
+  console.log(`[vite.config.ts] Setting base URL to: ${base}`)
+  console.log(`[vite.config.ts] Mode: ${mode}`)
 
   return {
     server: {
-      host: true
+      host: true,
     },
     plugins: [
       vue(),
       vueDevTools(),
       tailwindcss(),
-      sentryVitePlugin({
-        org: 'envious',
-        project: 'javascript-vue',
-        authToken: process.env.SENTRY_AUTH_TOKEN,
-      }),
+      mode === 'production'
+        ? sentryVitePlugin({
+            org: 'envious',
+            project: 'javascript-vue',
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+          })
+        : undefined,
     ],
 
     resolve: {
