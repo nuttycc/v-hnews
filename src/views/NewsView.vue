@@ -52,7 +52,7 @@ import createLogger from '@/lib/slogger'
 
 const logger = createLogger('[NewsView]')
 
-const HITS_PER_PAGE = 20
+const HITS_PER_PAGE = 15
 
 const props = defineProps<{
   type: StoryType

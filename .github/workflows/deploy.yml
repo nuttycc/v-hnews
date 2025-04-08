@@ -105,9 +105,21 @@ jobs:
 
       - name: Build Vue app
         if: steps.changes.outputs.skip_build == 'false'
-        run: pnpm build
+        run: |
+          echo "=== Sentry Upload Status ==="
+          export NODE_ENV=production
+          export SENTRY_AUTH_TOKEN="${{ secrets.SENTRY_AUTH_TOKEN }}"
+          pnpm build 2>&1 | tee build.log
+          echo "----------------------------"
+          if grep -i 'sentry' build.log; then
+            echo "Sentry related output detected above."
+          else
+            echo "No Sentry output detected."
+          fi
+          echo "=== End of Sentry Status ==="
         env:
           NODE_ENV: production
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Verify build output
         if: steps.changes.outputs.skip_build == 'false'
@@ -156,7 +168,7 @@ jobs:
 
       - name: Add deployment URL to summary
         run: |
-          echo "### 🚀 部署成功: ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Deployment successful: ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Purge CDN cache
         env:

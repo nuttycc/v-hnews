@@ -21,20 +21,18 @@ export default defineConfig(({ mode }) => {
 
   return {
     server: {
-      host: true // Keep existing server config
+      host: true
     },
     plugins: [
       vue(),
       vueDevTools(),
       tailwindcss(),
-      // Conditionally include Sentry plugin only for non-Cloudflare builds
-      // Adjust this logic based on your Sentry setup needs for Cloudflare
-      // Ensure SENTRY_AUTH_TOKEN is available in the GitHub Actions environment if needed
-      !isCloudflare ? sentryVitePlugin({
+      sentryVitePlugin({
         org: 'envious',
         project: 'javascript-vue',
-      }) : undefined,
-    ].filter(Boolean), // Remove undefined entries if Sentry is excluded
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+      }),
+    ],
 
     resolve: {
       alias: {
